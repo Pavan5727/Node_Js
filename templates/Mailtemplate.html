@@ -1,0 +1,68 @@
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Your OTP Code</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+    }
+    .otp {
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 6px;
+      text-align: center;
+      margin: 20px 0;
+      color: #1a73e8;
+    }
+    .text {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #999;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">🔐 OTP Verification</div>
+
+    <p class="text">
+      Hello,<br />
+      Use the OTP below to complete your verification.
+    </p>
+
+    <div class="otp">{{OTP}}</div>
+
+    <p class="text">
+      This OTP is valid for <strong>5 minutes</strong>.<br />
+      Do not share it with anyone.
+    </p>
+
+    <div class="footer">
+      If you didn’t request this, please ignore this email.
+    </div>
+  </div>
+</body>
+</html>
