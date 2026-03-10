@@ -1,22 +1,31 @@
-const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerJsdoc = require("swagger-jsdoc");
 
-const swaggerOptions = {
+const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'Node API Documentation',
-      version: '1.0.0',
-      description: 'API documentation for Node + Express + MongoDB'
+      title: "User API",
+      version: "1.0.0",
+      description: "Node Express JWT API"
     },
     servers: [
       {
-        url: 'http://localhost:5000'
+        url: "http://localhost:5000"
       }
-    ]
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    }
   },
-  apis: ['./routes/*.js'] // where swagger will look for API comments
+  apis: ["./Routes/*.js"]
 };
 
-const swaggerSpec = swaggerJSDoc(swaggerOptions);
+const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = swaggerSpec;

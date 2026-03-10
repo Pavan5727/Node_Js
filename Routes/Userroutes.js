@@ -2,10 +2,16 @@ const express = require('express');
 const router = express.Router();
 const { createUser, getUsers } = require('../controllers/Usercontroller');
 const { sendOtp, verifyOtp } = require('../controllers/Otpcontroller');
+const authMiddleware = require('../controllers/authMiddleware');
 
 /**
  * @swagger
  * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  *   schemas:
  *     User:
  *       type: object
@@ -15,23 +21,14 @@ const { sendOtp, verifyOtp } = require('../controllers/Otpcontroller');
  *       properties:
  *         name:
  *           type: string
- *           
  *         email:
  *           type: string
- *           
- *        
- *         
- * 
  *         mobile:
  *           type: string
- * 
- *         passowrd:
- *            type: string
- * 
+ *         password:
+ *           type: string
  *         address:
- *            type: string
- * 
- *           
+ *           type: string
  */
 
 /**
@@ -52,17 +49,20 @@ const { sendOtp, verifyOtp } = require('../controllers/Otpcontroller');
  */
 router.post('/', createUser);
 
+
 /**
  * @swagger
  * /api/users:
  *   get:
  *     summary: Get all users
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of users
  */
-router.get('/', getUsers);
+router.get('/', authMiddleware, getUsers);
 
 
 /**
@@ -86,6 +86,7 @@ router.get('/', getUsers);
  *         description: OTP sent successfully
  */
 router.post('/send-otp', sendOtp);
+
 
 /**
  * @swagger
