@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, getUsers, userInfo, createRole, signIn, getUserAccess  } = require('../controllers/Usercontroller');
+const { createUser, getUsers, userInfo, createRole, signIn, getUserAccess, updateUserProfileImage  } = require('../controllers/Usercontroller');
 const { sendOtp, verifyOtp } = require('../controllers/Otpcontroller');
 const authMiddleware = require('../controllers/authMiddleware');
-
+const upload = require('../controllers/image');
 
 /**
  * @swagger
@@ -120,6 +120,36 @@ router.get('/', authMiddleware, getUsers);
  *         description: User information
  */
 router.get('/info', authMiddleware, userInfo);
+
+/**
+ * @swagger
+ * /api/users/profile-pic:
+ *   put:
+ *     summary: Upload user profile picture
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               profilePic:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile picture updated successfully
+ */
+router.put(
+  '/profile-pic',
+  authMiddleware,
+  upload.single('profilePic'),
+  updateUserProfileImage
+);
+
 /**
  * @swagger
  * /api/users/roles:
@@ -211,7 +241,7 @@ router.post('/roles', authMiddleware, createRole);
  *       500:
  *         description: Internal server error
  */
-router.get('/user-access/:email', getUserAccess);
+router.get('/user-access/:email',authMiddleware, getUserAccess);
 
 
 /**

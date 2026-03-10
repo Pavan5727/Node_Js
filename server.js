@@ -17,6 +17,7 @@ app.use(cors({
 // Swagger UI
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api/otp', require('./Routes/Otproutes'));
 // Routes

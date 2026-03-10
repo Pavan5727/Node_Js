@@ -161,6 +161,36 @@ exports.userInfo = async (req, res) => {
   }
 };
 
+exports.updateUserProfileImage = async (req, res) => {
+  try {
+
+    const userId = req.user.userId;
+
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No image uploaded"
+      });
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+      { userId },
+      { $set: { profilePic: req.file.filename } },
+      { new: true }
+    ).select('-password');
+
+    res.status(200).json({
+      message: "Profile picture updated successfully",
+      image: req.file.filename,
+      data: updatedUser
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
 exports.createRole = async (req, res) => {
   try {
 
