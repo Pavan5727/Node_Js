@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { createUser, getUsers, userInfo, createRole, signIn, getUserAccess, updateUserProfileImage  } = require('../controllers/Usercontroller');
+const { createUser, getUsers, userInfo, createRole, signIn, getUserAccess, updateUserProfileImage, addTeamMember,
+  getMyTeam, deleteAllUsers
+ } = require('../controllers/Usercontroller');
 const { sendOtp, verifyOtp } = require('../controllers/Otpcontroller');
 const authMiddleware = require('../controllers/authMiddleware');
 const upload = require('../controllers/image');
@@ -84,7 +86,98 @@ router.post('/login', signIn);
  */
 router.post('/', createUser);
 
+/**
+ * @swagger
+ * /api/users/add-team-member:
+ *   post:
+ *     summary: Add team member using team code
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - mobile
+ *               - password
+ *               - address
+ *               - teamCode
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: string
+ *               email:
+ *                 type: string
+ *                 example: string
+ *               mobile:
+ *                 type: string
+ *                 example: string
+ *               password:
+ *                 type: string
+ *                 example: string
+ *               address:
+ *                 type: string
+ *                 example: string
+ *               teamCode:
+ *                 type: string
+ *                 example: string
+ *     responses:
+ *       201:
+ *         description: Team member added successfully
+ *       400:
+ *         description: Email already exists
+ *       404:
+ *         description: Invalid team code
+ */
+router.post('/add-team-member', authMiddleware, addTeamMember);
 
+/**
+ * @swagger
+ * /api/users/my-team:
+ *   get:
+ *     summary: Get team members of logged-in admin
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of team members
+ */
+router.get('/my-team', authMiddleware, getMyTeam);
+
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
+router.get('/', authMiddleware, getUsers);
+
+/**
+ * @swagger
+ * /api/users/delete-all:
+ *   delete:
+ *     summary: Delete all users
+ *     description: Remove all users from the database (Admin + Team Members)
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: All users deleted successfully
+ *       500:
+ *         description: Server error
+ */
+router.delete('/delete-all', deleteAllUsers);
 /**
  * @swagger
  * /api/users:

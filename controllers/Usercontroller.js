@@ -9,6 +9,19 @@ const generateUserId = () => {
   return 'USER' + Date.now();
 };
 
+function generateTeamCode(email) {
+  const firstFour = email.substring(0, 4).toUpperCase();
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
+
+  for (let i = 0; i < 6; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return firstFour + randomPart;
+}
+
 exports.signIn = async (req, res) => {
   try {
 
@@ -47,12 +60,15 @@ exports.signIn = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      token
+      token,
+      userId: user.userId,
+      teamCode: user.teamCode,
+      role: user.role
     });
 
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -62,14 +78,12 @@ exports.createUser = async (req, res) => {
 
     const { name, email, mobile, password, address } = req.body;
 
-    // check password
     if (!password) {
       return res.status(400).json({
         message: "Password is required"
       });
     }
 
-    // check if email already exists
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -78,8 +92,9 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const teamCode = generateTeamCode(email);
 
     const user = new User({
       name,
@@ -87,16 +102,18 @@ exports.createUser = async (req, res) => {
       mobile,
       address,
       password: hashedPassword,
-      userId: generateUserId()
+      userId: generateUserId(),
+      teamCode: teamCode,
+      role: "Admin"   
     });
 
     await user.save();
 
-    // generate token
     const token = jwt.sign(
       {
         userId: user.userId,
-        email: user.email
+        email: user.email,
+        role: user.role
       },
       SECRET_KEY,
       { expiresIn: "24h" }
@@ -105,6 +122,8 @@ exports.createUser = async (req, res) => {
     res.status(201).json({
       message: "User created successfully",
       userId: user.userId,
+      role: user.role,
+      teamCode: teamCode,
       token: token
     });
 
@@ -115,6 +134,64 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.addTeamMember = async (req, res) => {
+  try {
+
+    const { name, email, mobile, password, address, teamCode } = req.body;
+
+    const leader = await User.findOne({ teamCode });
+
+    if (!leader) {
+      return res.status(404).json({
+        message: "Invalid team code"
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "Email already exists"
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const member = new User({
+      name,
+      email,
+      mobile,
+      address,
+      password: hashedPassword,
+      userId: generateUserId(),
+      teamLeader: leader.userId
+    });
+
+    await member.save();
+
+    res.status(201).json({
+      message: "Team member added successfully",
+      leader: leader.name
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
+exports.getMyTeam = async (req, res) => {
+
+ const userId = req.user.userId;
+
+ const members = await User.find({ teamLeader: userId });
+
+ res.json({
+   teamMembers: members
+ });
+
+};
 
 exports.getUsers = async (req, res) => {
   try {
@@ -132,10 +209,26 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+exports.deleteAllUsers = async (req, res) => {
+  try {
+
+    await User.deleteMany({});
+
+    res.json({
+      message: "All users deleted successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+};
+
 exports.userInfo = async (req, res) => {
   try {
 
-    const userId = req.user.userId; // from JWT token
+    const userId = req.user.userId;
 
     const user = await User.findOne({ userId }).select('-password');
 
@@ -146,9 +239,16 @@ exports.userInfo = async (req, res) => {
       });
     }
 
+    // convert image filename to full url
+    const userData = user.toObject();
+
+    if (userData.profilePic) {
+      userData.profilePic = `${req.protocol}://${req.get("host")}/uploads/profile/${userData.profilePic}`;
+    }
+
     res.status(200).json({
       success: true,
-      data: user
+      data: userData
     });
 
   } catch (error) {
@@ -175,8 +275,8 @@ exports.updateUserProfileImage = async (req, res) => {
     const updatedUser = await User.findOneAndUpdate(
       { userId },
       { $set: { profilePic: req.file.filename } },
-      { new: true }
-    ).select('-password');
+      { returnDocument: "after" }
+    ).select("-password");
 
     res.status(200).json({
       message: "Profile picture updated successfully",
